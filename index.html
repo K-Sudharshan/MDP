@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>Firefighting Robot — Web RC Controller</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header>
+      <div class="brand">
+        <div class="badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2c1.200 4.500-4 6.500-4 11a4 4 0 0 0 8 0c0-2.300-1-3.500-2.200-5.500-.2 1.800-.9 2.800-1.800 3.200C13 8.500 12.800 5 12 2z"/>
+          </svg>
+        </div>
+        <div>
+          <h1>Firefighting Robot</h1>
+          <p>Remote RC Controller <span id="robot-ip-display" class="target-meta">192.168.4.1 (HTTP)</span></p>
+        </div>
+      </div>
+      <div class="status" id="connection-badge" data-state="disconnected" role="status" aria-live="polite">
+        <span class="lamp"></span>
+        <span id="connection-text">DISCONNECTED</span>
+        <span id="latency-display" class="latency-pill" style="display: none;"></span>
+      </div>
+    </header>
+
+    <!-- Simulation Warning Banner -->
+    <div id="simulation-indicator" class="simulation-banner hidden" role="alert">
+      ⚠️ SIMULATION — NO HARDWARE CONNECTED
+    </div>
+
+    <!-- Error Alert Banner -->
+    <div id="error-message" class="error-banner" style="display: none;" role="alert"></div>
+
+    <!-- Main Grid: Two-Column Industrial Layout -->
+    <main class="grid">
+      <!-- Left Column: Drive Controls -->
+      <section class="card" aria-label="Drive Controls">
+        <h2>Drive</h2>
+        <div class="plate">
+          <div class="pad" role="region" aria-label="Movement Controls">
+            <button id="btn-forward" class="dir up rc-btn" data-dir="Forward" aria-label="Forward">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 19V5M5 12l7-7 7 7"/>
+              </svg>
+              <span>Forward</span>
+              <span class="key-hint">W / ↑</span>
+            </button>
+
+            <button id="btn-left" class="dir left rc-btn" data-dir="Left" aria-label="Left">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5M12 5l-7 7 7 7"/>
+              </svg>
+              <span>Left</span>
+              <span class="key-hint">A / ←</span>
+            </button>
+
+            <div class="hub" id="hub">IDLE</div>
+
+            <button id="btn-right" class="dir right rc-btn" data-dir="Right" aria-label="Right">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+              <span>Right</span>
+              <span class="key-hint">D / →</span>
+            </button>
+
+            <button id="btn-backward" class="dir down rc-btn" data-dir="Backward" aria-label="Backward">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 5v14M19 12l-7 7-7-7"/>
+              </svg>
+              <span>Backward</span>
+              <span class="key-hint">S / ↓</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Prominent Emergency Stop Button -->
+        <button id="btn-stop" class="estop rc-btn" type="button" aria-label="Emergency Stop">
+          <i class="dome"></i>
+          <div class="estop-text">
+            <span>Emergency Stop</span>
+            <span class="estop-hint">Space / Esc / Tap</span>
+          </div>
+        </button>
+
+        <div class="drive-help">
+          <p><strong>Press & Hold:</strong> Robot moves while button is held. Releasing or losing focus immediately triggers STOP.</p>
+        </div>
+      </section>
+
+      <!-- Right Column: Settings and Diagnostics -->
+      <div class="col">
+        <!-- Hardware Settings Panel -->
+        <section class="card" aria-label="Hardware settings">
+          <h2>Hardware Settings</h2>
+          <form id="settings-form" class="fields">
+            <div class="f full">
+              <label for="setting-ip">ESP32 Address / Hostname</label>
+              <input id="setting-ip" value="192.168.4.1" autocomplete="off" spellcheck="false" inputmode="url" required>
+            </div>
+            <div class="f third">
+              <label for="setting-protocol">Protocol</label>
+              <select id="setting-protocol">
+                <option value="http">HTTP</option>
+                <option value="ws">WebSocket</option>
+              </select>
+            </div>
+            <div class="f third">
+              <label for="setting-http-port">HTTP Port</label>
+              <input id="setting-http-port" type="number" value="80" min="1" max="65535" inputmode="numeric">
+            </div>
+            <div class="f third">
+              <label for="setting-ws-port">WS Port</label>
+              <input id="setting-ws-port" type="number" value="81" min="1" max="65535" inputmode="numeric">
+            </div>
+            <div class="f full btn-actions">
+              <button type="submit" class="btn btn-primary" id="btn-save-settings">Save & Apply</button>
+              <button type="button" class="btn btn-secondary" id="btn-test-connection">Test Connection</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Diagnostic Console -->
+        <section class="card" aria-label="Diagnostic console">
+          <div class="card-header-flex">
+            <h2>Diagnostic Console</h2>
+            <button id="btn-clear-logs" class="btn-clear" type="button">Clear</button>
+          </div>
+          <div class="console" id="log-console" role="log" aria-live="polite">
+            <div class="line info">
+              <span class="t">--:--:--</span>
+              <span class="tag">INFO</span>
+              <span class="msg">Controller loaded. Ready to connect.</span>
+            </div>
+          </div>
+          <p class="console-note">Live transport logs only. No simulated data in real mode.</p>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="esp32-client.js"></script>
+  <script src="controller.js"></script>
+</body>
+</html>

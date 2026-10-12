@@ -1,0 +1,20 @@
+{
+  "name": "esp32-firefighting-robot-rc",
+  "version": "1.0.0",
+  "description": "Minimal web-based RC controller for ESP32 firefighting robot over Wi-Fi",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "sim": "node server.js --mock",
+    "mock": "node server.js --mock",
+    "test": "node test.js"
+  },
+  "keywords": [
+    "esp32",
+    "robotics",
+    "rc-controller",
+    "wifi"
+  ],
+  "author": "Sudharshan",
+  "license": "ISC"
+}
